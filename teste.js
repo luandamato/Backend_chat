@@ -32,6 +32,7 @@ io.on('connection', socket =>{
   
         var i = conexoes.indexOf(socket.id);
         conexoes.splice(i, 1);
+        console.log("desconectado: "+socket.id)
      });
 })
 
