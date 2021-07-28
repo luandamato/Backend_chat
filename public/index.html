@@ -13,7 +13,7 @@
 </head>
 <body>
     <form id="chat">
-        <input type="text" name="username" placeholder="Nome de Usuario">
+        <input type="hidden" id="nome" name="username" placeholder="Nome de Usuario">
         <div class="messages"></div>
         <input type="text" id='msg' name="message" placeholder="Mensagem...">
         <button type="submit">Enviar</button>
@@ -22,7 +22,23 @@
     </form>
 
     <script type="text/javascript">
-        var socket = io('http://18.230.130.206:3000');
+
+        function getQueryString() {
+            var result = {}, queryString = location.search.slice(1),
+                re = /([^&=]+)=([^&]*)/g, m;
+
+            while (m = re.exec(queryString)) {
+                result[decodeURIComponent(m[1])] = decodeURIComponent(m[2]);
+            }
+
+            return result;
+        }
+
+        var nome = getQueryString()["username"];
+        alert("Logado como: "+nome);
+        document.getElementById('nome').value = nome;
+
+        var socket = io('http://localhost:3000');
 
         function renderMessage(message) {
             if (message.id == socket.id){
@@ -48,7 +64,6 @@
         $('#chat').submit(function(event) {
             event.preventDefault();
 
-            var nome = $('input[name=username]').val();
             var msg = $('input[name=message').val();
             var id = socket.id;
 

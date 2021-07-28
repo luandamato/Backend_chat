@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nome</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.3/socket.io.js"></script>
+
+     <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <form id="chat" action="index.html" method="GET">
+        <input type="text" name="username" placeholder="Nome de Usuario">
+        <button type="submit">Enviar</button>
+    </form>
+
+    <script type="text/javascript">
+
+        $('#chat').submit(function(event) {
+            event.preventDefault();
+
+            var nome = $('input[name=username]').val();
+            
+            res.render
+        })
+    </script>
+</body>
+</html>
