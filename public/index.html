@@ -38,7 +38,7 @@
         alert("Logado como: "+nome);
         document.getElementById('nome').value = nome;
 
-        var socket = io('http://localhost:3000');
+        var socket = io('http://localhost');
 
         function renderMessage(message) {
             if (message.id == socket.id){
