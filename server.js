@@ -1,31 +1,24 @@
-const SocketServer = require('websocket').server
-const http = require('http')
+const express = require('express');
+const path = require('path');
+const routes = require('./routes');
 
-const server = http.createServer((req, res) => {})
+const app = express();
+const server = require('http').createServer(app);
+const io = require('socket.io')(server);
 
-server.listen(3000, ()=>{
-    console.log("rodando no porta 3000")
+app.use(express.static(path.join(__dirname, 'public')));
+app.set('views', path.join(__dirname, 'public'));
+app.engine('html', require('ejs').renderFile);
+app.set('view engine', 'html')
+app.use(express.json());
+
+app.use(routes);
+io.on('connection', socket =>{
+    require('./Controllers/socket')(socket);
 })
 
-wsServer = new SocketServer({httpServer:server})
 
-const connections = []
 
-wsServer.on('request', (req) => {
-    const connection = req.accept()
-    console.log('nova conexão')
-    connections.push(connection)
-
-    connection.on('message', (mes) => {
-        connections.forEach(element => {
-            if (element != connection)
-                element.sendUTF(mes.utf8Data)
-        })
-    })
-
-    connection.on('close', (resCode, des) => {
-        console.log('connection closed')
-        connections.splice(connections.indexOf(connection), 1)
-    })
-
+server.listen(3000, ()=> {
+    console.log("rodando no porta 3000")
 })

@@ -48,3 +48,11 @@ html, body {
     display: flex; 
     justify-content: flex-end;
   }
+
+  .novoUsuario {
+    text-align: center;
+    background-color: lightblue;
+    width: 100px;
+  	margin: 20px auto;
+    border-radius: 25px;
+  }
