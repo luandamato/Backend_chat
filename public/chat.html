@@ -38,8 +38,8 @@
         //alert("Logado como: "+nome);
         document.getElementById('nome').value = nome;
 
-        //var socket = io('http://18.230.130.206:3000/');
-        var socket = io('http://localhost:3000/');
+        var socket = io('http://18.230.130.206:3000/');
+        //var socket = io('http://localhost:3000/');
 
         function renderMessage(message) {
             if (message.id == socket.id){
