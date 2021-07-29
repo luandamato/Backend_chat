@@ -163,6 +163,7 @@
                 renderMessage(object);
                 socket.emit('enviarMensagem', object);
             }
+            doneTyping()
             document.getElementById('msg').value = null;
         })
 
