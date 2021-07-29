@@ -14,7 +14,9 @@
 <body>
     <form id="chat">
         <input type="hidden" id="nome" name="username" placeholder="Nome de Usuario">
+        <div class="pessoasConectadas"></div>
         <div class="messages"></div>
+        <div class="pessoasDigitando"></div>
         <input type="text" id='msg' name="message" placeholder="Mensagem...">
         <button type="submit">Enviar</button>
 
@@ -22,7 +24,9 @@
     </form>
 
     <script type="text/javascript">
-
+        var conexoes = [];
+        var pessoasDigitando = [];
+        
         function getQueryString() {
             var result = {}, queryString = location.search.slice(1),
                 re = /([^&=]+)=([^&]*)/g, m;
@@ -38,29 +42,95 @@
         //alert("Logado como: "+nome);
         document.getElementById('nome').value = nome;
 
-        var socket = io('http://18.230.130.206:3000/');
-        //var socket = io('http://localhost:3000/');
+        //var socket = io('http://18.230.130.206:3000/');
+        var socket = io('http://localhost:3000/');
 
         function renderMessage(message) {
             if (message.id == socket.id){
                 $('.messages').append('<div class="messageEnviada">'+message.msg+'</div>')
             }
             else{
-                $('.messages').append('<div class="message"><strong>'+ message.nome +'</strong>:'+message.msg+'</div>')
+                $('.messages').append('<div class="message"><strong>'+ message.nome +'</strong>: '+message.msg+'</div>')
             }
             
         }
-        function newUser(message) {
-            $('.messages').append('<div class="novoUsuario">'+message.nome+'</div>')
+
+        function atualizarPessoasDigitando(){
+            $('.pessoasDigitandoAtual').remove();
+            var str = "";
+            if (pessoasDigitando.length == 0){
+                return false;
+            }
+            if (pessoasDigitando.length > 4){
+                str = "Diversas pessoas estão digitando...";
+            }
+            else{
+                pessoasDigitando.forEach(element => {
+                    if (str){
+                        str =  str + ",";
+                    }
+                    str += element;
+                });
+                if (pessoasDigitando.length == 1){
+                        str = str + " está digitando...";
+                    }
+                    else{
+                        str = str + " estão digitando...";
+                    }
+            }
+            $('.pessoasDigitando').append('<div class="pessoasDigitandoAtual">'+str+'</div>')
         }
+
+        function atualizarPessoasOnline(){
+            $('.pessoasOnline').remove();
+            var str = "Voce ";
+            conexoes.forEach(element => {
+                if (str){
+                    str =  str + ",";
+                }
+                str += element.nome;
+            });
+            $('.pessoasConectadas').append('<div class="pessoasOnline">'+str+'</div>')
+        }
+
 
         socket.on('mensagemRecebida', function(message){
             renderMessage(message)
         })
 
-        socket.on('novaConexao', function(message){
-            newUser(message)
+        socket.on('conexoesAnteriores', function(messages){
+            for (message of messages){
+                conexoes.push(message)
+            }
+            atualizarPessoasOnline()
         })
+
+        socket.on('novaConexao', function(message){
+            conexoes.push(message)
+            $('.messages').append('<div class="novoUsuario">'+message.nome+' Entrou </div>')
+            atualizarPessoasOnline()
+        })
+
+        socket.on('desconectado', function(message){
+            const element = conexoes.find(item => item == message)
+            var i = conexoes.indexOf(element);
+            conexoes.splice(i, 1);
+            $('.messages').append('<div class="novoUsuario">'+message.nome+' Saiu </div>')
+            atualizarPessoasOnline()
+        })
+
+        socket.on('digitando', function(message){
+            pessoasDigitando.push(message.nome);
+            atualizarPessoasDigitando()
+        })
+
+        socket.on('parouDigitar', function(message){
+            const element = pessoasDigitando.find(item => item == message.nome)
+            var i = pessoasDigitando.indexOf(element);
+            pessoasDigitando.splice(i, 1);
+            atualizarPessoasDigitando()
+        })
+
 
         socket.on('connect', function(message){
             var id = socket.id;
@@ -95,6 +165,44 @@
             }
             document.getElementById('msg').value = null;
         })
+
+        var digitando = false;
+        var typingTimer;                //timer identifier
+        var doneTypingInterval = 5000;  //time in ms, 5 second for example
+        var $input = $('#msg');
+
+        //on keyup, start the countdown
+        $input.on('keyup', function () {
+            clearTimeout(typingTimer);
+            typingTimer = setTimeout(doneTyping, doneTypingInterval);
+
+            var id = socket.id;
+            var object = {
+                nome, 
+                id,
+            };
+            if (!digitando){
+                socket.emit('digitando', object);
+                digitando = true;
+            }
+
+        });
+
+        //on keydown, clear the countdown 
+        $input.on('keydown', function () {
+            clearTimeout(typingTimer);
+        });
+
+        //user is "finished typing," do something
+        function doneTyping () {
+            var id = socket.id;
+            var object = {
+                nome, 
+                id,
+            };
+            socket.emit('parouDigitar', object);
+            digitando = false;
+        }
     </script>
 </body>
 </html>

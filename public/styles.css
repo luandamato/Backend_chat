@@ -38,8 +38,8 @@ html, body {
   
   .messages {
     width: 80%;
-    height: 75%;
-    margin: 20px 0;
+    height: 70%;
+    margin: 2px 0;
     border: 1px solid #ddd;
     padding: 20px;
   }
@@ -55,4 +55,12 @@ html, body {
     width: 100px;
   	margin: 20px auto;
     border-radius: 25px;
+  }
+
+  .pessoasConectadas, .pessoasDigitando{
+    width: 80%;
+    font-size: 15px;
+    padding: 2px;
+    margin:0;
+    text-align: left;
   }

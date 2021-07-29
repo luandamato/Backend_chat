@@ -7,6 +7,7 @@ let androidTokens = []
 module.exports= function(socket){
 
     socket.emit('mensagensAnteriores', mensagens);
+    socket.emit('conexoesAnteriores', conexoes);
     console.log('nova conexão: '+socket.id)
 
 
@@ -14,6 +15,14 @@ module.exports= function(socket){
         conexoes.push(data);
         androidTokens.push(data.pushTokenId);
         socket.broadcast.emit("novaConexao", data)
+    });
+
+    socket.on('digitando', data => {
+        socket.broadcast.emit("digitando", data)
+    });
+
+    socket.on('parouDigitar', data => {
+        socket.broadcast.emit("parouDigitar", data)
     });
 
 
@@ -33,9 +42,18 @@ module.exports= function(socket){
 
     socket.on('disconnect', function() {
     
-        var i = conexoes.indexOf(socket.id);
+        const element = conexoes.find(item => item.id == socket.id)
+        var i = conexoes.indexOf(element);
+
+        var data = {};
+        data.nome = element.nome;
+        data.id = element.id;
+
         conexoes.splice(i, 1);
-        console.log("desconectado: "+socket.id)
+        console.log("desconectado: "+data.nome)
+
+        socket.broadcast.emit("desconectado", data)
+        socket.broadcast.emit("parouDigitar", data)
     });
 
 }
