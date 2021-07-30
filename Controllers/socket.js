@@ -8,7 +8,6 @@ module.exports= function(socket){
 
     socket.emit('mensagensAnteriores', mensagens);
     socket.emit('conexoesAnteriores', conexoes);
-    console.log('nova conexão: '+socket.id)
 
 
     socket.on('conectar', data => {
@@ -50,7 +49,6 @@ module.exports= function(socket){
         data.id = element.id;
 
         conexoes.splice(i, 1);
-        console.log("desconectado: "+data.nome)
 
         socket.broadcast.emit("desconectado", data)
         socket.broadcast.emit("parouDigitar", data)

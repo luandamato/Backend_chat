@@ -42,12 +42,36 @@ html, body {
     margin: 2px 0;
     border: 1px solid #ddd;
     padding: 20px;
+    overflow:auto;
+    overflow-x:hidden;
   }
 
   .messageEnviada {
     display: flex; 
     justify-content: flex-end;
   }
+
+  .message {
+    background-color: greenyellow;
+    border-radius: 10px;
+    margin-left: 20px;
+    margin-right: 50px;
+    margin-bottom: 5px;
+    padding: 8px;
+    display:inline-block;
+    word-wrap: break-word;
+  }
+  .messageImg {
+    background-color: greenyellow;
+    border-radius: 10px;
+    margin-left: 20px;
+    margin-right: 50px;
+    margin-bottom: 5px;
+    padding: 3px;
+    display:inline-block;
+    word-wrap: break-word;
+  }
+  
 
   .novoUsuario {
     text-align: center;
@@ -63,4 +87,9 @@ html, body {
     padding: 2px;
     margin:0;
     text-align: left;
+  }
+
+  .img{
+    max-height: 250px;
+    max-width: 250px;
   }

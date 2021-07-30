@@ -15,7 +15,7 @@
     <form id="chat">
         <input type="hidden" id="nome" name="username" placeholder="Nome de Usuario">
         <div class="pessoasConectadas"></div>
-        <div class="messages"></div>
+        <input type="file" id="fileInput"><div class="messages" id="messages"></div>
         <div class="pessoasDigitando"></div>
         <input type="text" id='msg' name="message" placeholder="Mensagem...">
         <button type="submit">Enviar</button>
@@ -26,6 +26,7 @@
     <script type="text/javascript">
         var conexoes = [];
         var pessoasDigitando = [];
+        var ultimoAEnviar = "";
         
         function getQueryString() {
             var result = {}, queryString = location.search.slice(1),
@@ -42,16 +43,47 @@
         //alert("Logado como: "+nome);
         document.getElementById('nome').value = nome;
 
-        var socket = io('http://18.230.130.206:3000/');
-        //var socket = io('http://localhost:3000/');
+        // var socket = io('http://18.230.130.206:3000/');
+        var socket = io('http://localhost:3000/');
+
+        function scroll(limit){
+            const out = document.getElementById("messages")
+            //se esta no bottom da div
+            const isScrolledToBottom = out.scrollHeight - out.clientHeight <= out.scrollTop + limit
+
+            if (isScrolledToBottom) {
+                //setta o scroll
+                out.scrollTop = out.scrollHeight - out.clientHeight
+            }
+        }
 
         function renderMessage(message) {
+            var scrollLimit = 120
             if (message.id == socket.id){
-                $('.messages').append('<div class="messageEnviada">'+message.msg+'</div>')
+                if (message.msg){
+                    $('.messages').append('<div class="messageEnviada">'+message.msg+'</div>')
+                }
+                else{
+                    scrollLimit = 450
+                    $('.messages').append('<div class="messageEnviada">'+message.msg+'</div>')
+                }
             }
             else{
-                $('.messages').append('<div class="message"><strong>'+ message.nome +'</strong>: '+message.msg+'</div>')
+                if (ultimoAEnviar != message.nome){
+                    $('.messages').append('<div><strong>'+ message.nome +'</strong>: </div>')
+                }
+                if (message.msg){
+                    $('.messages').append('<div class="message">'+message.msg+'</div>')
+                }
+                else{
+                    scrollLimit = 450
+                    $('.messages').append('<div class="messageImg"> <img class="img" style="border-radius: 10px;" src="data:image/png;base64,'+message.img+'" alt="Red dot" /> </div>')
+                    
+                }
+                $('.messages').append('<br>')
             }
+            ultimoAEnviar = message.nome;
+            scroll(scrollLimit)
             
         }
 
@@ -91,6 +123,7 @@
                 str += element.nome;
             });
             $('.pessoasConectadas').append('<div class="pessoasOnline">'+str+'</div>')
+            scroll(80)
         }
 
 
@@ -145,6 +178,8 @@
             for (message of messages){
                 renderMessage(message)
             }
+            const out = document.getElementById("messages")
+            out.scrollTop = out.scrollHeight - out.clientHeight
             
         })
 
@@ -154,12 +189,26 @@
             var msg = $('input[name=message').val();
             var id = socket.id;
 
-            if (nome.length && msg.length){
-                var object = {
-                    nome, 
-                    msg,
-                    id,
-                };
+            if (nome.length){
+                getBase64().then(
+                    data => alert(data)
+                );
+                if (msg.length){
+                    var object = {
+                        nome, 
+                        msg,
+                        id,
+                    };
+                }
+                else if (stringToBase64()){
+                    const img = stringToBase64()
+                    var object = {
+                        nome, 
+                        img,
+                        id,
+                    };
+                }
+                
                 renderMessage(object);
                 socket.emit('enviarMensagem', object);
             }
@@ -204,6 +253,33 @@
             socket.emit('parouDigitar', object);
             digitando = false;
         }
+
+        function stringToBase64(){
+            var fileInput = document.getElementById('fileInput');
+
+            var reader = new FileReader();
+            reader.readAsDataURL(fileInput.files[0]);
+
+            reader.onload = function () {
+                console.log(reader.result);//base64encoded string
+                return reader.result;
+            };
+            reader.onerror = function (error) {
+                console.log('Error: ', error);
+                return false;
+            };
+        }
+
+        function getBase64() {
+            alert('Base64')
+            var file = document.querySelector('#files > input[type="file"]').files[0];
+            return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
+}
     </script>
 </body>
 </html>
