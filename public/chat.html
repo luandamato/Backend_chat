@@ -15,10 +15,22 @@
     <form id="chat">
         <input type="hidden" id="nome" name="username" placeholder="Nome de Usuario">
         <div class="pessoasConectadas"></div>
-        <input type="file" id="fileInput"><div class="messages" id="messages"></div>
+        <!-- <img src="" height="200" alt="Prévia da imagem..."> -->
+        <div class="container">
+            <div class="messages" id="messages" ondrop="dropHandler(event);" ondragover="dragOverHandler(event);"></div>
+            <div class="previewImage" id="previewImage">
+                <button type="button" class="btnFecharPreview"id="cancelarImagem" onclick="toggle()">X</button>
+                <img src="" id="previewImg" class="imgPreview" alt="Prévia da imagem...">
+            </div>
+        </div>
+        <!-- <div class="messages" id="messages" ondrop="dropHandler(event);" ondragover="dragOverHandler(event);"></div>
+        <div class="previewImage" id="previewImage" ondrop="dropHandler(event);" ondragover="dragOverHandler(event);">
+            <button type="button" class="btnFecharPreview"id="cancelarImagem" onclick="toggle()">X</button>
+            <img src="" id="previewImg" class="imgPreview" alt="Prévia da imagem...">
+        </div> -->
         <div class="pessoasDigitando"></div>
-        <input type="text" id='msg' name="message" placeholder="Mensagem...">
-        <button type="submit">Enviar</button>
+        <input class="inputMessage" type="text" id='msg' name="message" placeholder="Mensagem...">
+        <button type="submit" class="btnEnviar">Enviar</button>
 
 
     </form>
@@ -27,6 +39,7 @@
         var conexoes = [];
         var pessoasDigitando = [];
         var ultimoAEnviar = "";
+        var base64 = "";
         
         function getQueryString() {
             var result = {}, queryString = location.search.slice(1),
@@ -43,8 +56,8 @@
         //alert("Logado como: "+nome);
         document.getElementById('nome').value = nome;
 
-        // var socket = io('http://18.230.130.206:3000/');
-        var socket = io('http://localhost:3000/');
+        var socket = io('http://18.230.130.206:3000/');
+        // var socket = io('http://localhost:3000/');
 
         function scroll(limit){
             const out = document.getElementById("messages")
@@ -65,7 +78,7 @@
                 }
                 else{
                     scrollLimit = 450
-                    $('.messages').append('<div class="messageEnviada">'+message.msg+'</div>')
+                    $('.messages').append('<div class="messageEnviada"><img class="img" style="border-radius: 10px;" src="data:image/png;base64,'+message.img+'" alt="Red dot" /></div>')
                 }
             }
             else{
@@ -115,10 +128,10 @@
 
         function atualizarPessoasOnline(){
             $('.pessoasOnline').remove();
-            var str = "Voce ";
+            var str = "Voce";
             conexoes.forEach(element => {
                 if (str){
-                    str =  str + ",";
+                    str =  str + ", ";
                 }
                 str += element.nome;
             });
@@ -190,9 +203,6 @@
             var id = socket.id;
 
             if (nome.length){
-                getBase64().then(
-                    data => alert(data)
-                );
                 if (msg.length){
                     var object = {
                         nome, 
@@ -200,16 +210,18 @@
                         id,
                     };
                 }
-                else if (stringToBase64()){
-                    const img = stringToBase64()
+                else if (base64.length){
+                    const img = base64
                     var object = {
                         nome, 
                         img,
                         id,
                     };
+                    toggle();
                 }
-                
+                base64 = ""
                 renderMessage(object);
+                
                 socket.emit('enviarMensagem', object);
             }
             doneTyping()
@@ -254,32 +266,69 @@
             digitando = false;
         }
 
-        function stringToBase64(){
-            var fileInput = document.getElementById('fileInput');
+        function stringToBase64(file){
+            var preview = document.getElementById("previewImg");
+            //var file    = document.querySelector('input[type=file]').files[0];
+            var reader  = new FileReader();
 
-            var reader = new FileReader();
-            reader.readAsDataURL(fileInput.files[0]);
+            reader.onloadend = function () {
+                preview.src = reader.result;
+                base64 = reader.result.split('base64,')[1]
+                toggle()
+            }
 
-            reader.onload = function () {
-                console.log(reader.result);//base64encoded string
-                return reader.result;
-            };
-            reader.onerror = function (error) {
-                console.log('Error: ', error);
-                return false;
-            };
+            if (file) {
+                reader.readAsDataURL(file);
+            } else {
+                preview.src = "";
+            }
         }
 
-        function getBase64() {
-            alert('Base64')
-            var file = document.querySelector('#files > input[type="file"]').files[0];
-            return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = error => reject(error);
-        });
-}
+        function dragOverHandler(ev) {
+
+            // Impedir o comportamento padrão (impedir que o arquivo seja aberto)
+            ev.preventDefault();
+        }
+
+        function dropHandler(ev) {
+
+            // Impedir o comportamento padrão (impedir que o arquivo seja aberto)
+            ev.preventDefault();
+
+            if (ev.dataTransfer.items) {
+                // Use a interface DataTransferItemList para acessar o (s) arquivo (s)
+                for (var i = 0; i < ev.dataTransfer.items.length; i++) {
+                // Se os itens soltos não forem arquivos, rejeite-os
+                    if (ev.dataTransfer.items[i].kind === 'file') {
+                        var file = ev.dataTransfer.items[i].getAsFile();
+                        stringToBase64(file)
+                    }
+                }
+            } else {
+                // Use a interface DataTransfer para acessar o (s) arquivo (s)
+                for (var i = 0; i < ev.dataTransfer.files.length; i++) {
+                    stringToBase64(ev.dataTransfer.files[i])
+                    console.log('... file[' + i + '].name = ' + ev.dataTransfer.files[i].name);
+                }
+            }
+        }
+
+        function toggle() {
+            var x = document.getElementById("messages");
+            var y = document.getElementById("previewImage");
+            var text = document.getElementById("msg");
+            if (y.style.display === "block") {
+                text.style.display = "block";
+                y.style.display = "none";
+                base64 = ""
+            } else {
+                text.style.display = "none";
+                y.style.display = "block";
+            }
+        }
+
+
+
     </script>
 </body>
 </html>
